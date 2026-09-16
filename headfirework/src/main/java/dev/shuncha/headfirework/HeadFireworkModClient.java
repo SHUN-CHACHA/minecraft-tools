@@ -9,7 +9,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.permissions.Permissions;
-import org.lwjgl.glfw.GLFW;
 
 public class HeadFireworkModClient implements ClientModInitializer {
 
@@ -22,8 +21,8 @@ public class HeadFireworkModClient implements ClientModInitializer {
 
         openConfigKey = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.headfirework.open_config",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_J,
+                InputConstants.Type.KEYBOARD,
+                InputConstants.KEY_J,
                 category
         ));
 
@@ -32,7 +31,7 @@ public class HeadFireworkModClient implements ClientModInitializer {
                 if (!client.hasControlDown() || client.player == null) {
                     continue;
                 }
-                // OP権限(サーバー側の /headfirework config と同じ GAMEMASTERS 相当)が無ければ、画面自体を開かせない
+                // OP権限: サーバー側の /headfirework config と同じ GAMEMASTERS 相当がなければ、画面自体を開かせない
                 if (client.player.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER)) {
                     client.setScreenAndShow(new HeadFireworkConfigScreen());
                 } else {

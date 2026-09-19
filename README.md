@@ -15,3 +15,5 @@
 - [OreHighlighter](./orehighlighter/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — 鉱石視認性向上ツール。リソースパックを自動生成するPyQt6製デスクトップアプリ(Windows用exe配布)。ブロックごとにレインボー/枠線/点滅などのエフェクトを個別設定でき、体力・満腹度HUDアイコンの編集も可能です。
   - バージョン: v2.1.4
   - 使用マニュアル: [こちら](./orehighlighter/使用マニュアル.html)
+- [Everyone's Favorite Place (EFP)](efp/) — マルチサーバー参加者の拠点・設備座標を記録し、公開設定に応じて全員で共有できるPaperプラグイン。ディメンションごとに座標を管理し、座標マップ形式のGUIで一覧表示できます。
+  - バージョン: v1.0.0(Minecraft 26.2対応)

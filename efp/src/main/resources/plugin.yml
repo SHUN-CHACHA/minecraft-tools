@@ -1,0 +1,14 @@
+name: EveryonesFavoritePlace
+version: '${version}'
+main: dev.shuncha.efp.EfpPlugin
+api-version: '26.2'
+description: 参加者の拠点・設備の座標を記録し、公開設定に応じて全員で共有できるようにするプラグイン
+author: shun-cha
+commands:
+  efp:
+    description: 拠点・設備の座標を登録/共有します
+    usage: /<command> [add|remove|list|gui|public|private]
+permissions:
+  efp.use:
+    default: true
+    description: EFPコマンドの使用を許可

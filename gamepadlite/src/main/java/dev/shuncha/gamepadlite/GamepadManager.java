@@ -1,16 +1,25 @@
 package dev.shuncha.gamepadlite;
 
+import dev.shuncha.gamepadlite.mixin.ContainerScreenAccessor;
+import dev.shuncha.gamepadlite.mixin.ContainerScreenInvoker;
 import dev.shuncha.gamepadlite.mixin.KeyMappingAccessor;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.world.inventory.AbstractContainerMenu;
+import net.minecraft.world.inventory.ContainerInput;
+import net.minecraft.world.inventory.Slot;
 import org.lwjgl.sdl.SDLGamepad;
 import org.lwjgl.sdl.SDLInit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.IntBuffer;
+import java.util.List;
 
 public final class GamepadManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("GamepadLite");
@@ -20,6 +29,8 @@ public final class GamepadManager {
     /** 右スティック全倒し時の視点速度(マウス換算ピクセル/秒)。感度設定も掛かる */
     private static final double LOOK_SPEED = 900.0;
     private static final int RETRY_TICKS = 40;
+    /** 選択中スロットの枠の色(不透明の黄色) */
+    private static final int SLOT_HIGHLIGHT_COLOR = 0xFFFFFF00;
 
     private static boolean sdlReady;
     private static boolean sdlFailed;
@@ -32,7 +43,11 @@ public final class GamepadManager {
     private static boolean jumpHeld, sneakHeld, sprintHeld;
     private static double lookDx, lookDy;
 
-    private static boolean prevRt, prevLt, prevB, prevX, prevY, prevLb, prevRb;
+    private static boolean prevA, prevRt, prevLt, prevB, prevX, prevY, prevLb, prevRb;
+
+    // インベントリ等の画面内でのスロット選択(LB/RBで移動、Bで決定)
+    private static Object lastMenuRef;
+    private static int selectedSlotIndex;
 
     private GamepadManager() {}
 
@@ -158,6 +173,7 @@ public final class GamepadManager {
         boolean gameActive = mc.player != null && noScreen;
         active = gameActive;
 
+        boolean a = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_SOUTH);
         boolean b = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_EAST);
         boolean x = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_WEST);
         boolean y = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_NORTH);
@@ -167,7 +183,9 @@ public final class GamepadManager {
         boolean lt = axis(SDLGamepad.SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > TRIGGER_THRESHOLD;
 
         if (gameActive) {
-            jumpHeld = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_SOUTH);
+            lastMenuRef = null;
+
+            jumpHeld = a;
             sprintHeld = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_LEFT_STICK);
             sneakHeld = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_RIGHT_STICK);
 
@@ -186,10 +204,17 @@ public final class GamepadManager {
             sneakHeld = false;
             hold(o.keyAttack, false, prevRt);
             hold(o.keyUse, false, prevLt);
-            // 画面(インベントリ等)を開いている間はBで閉じる
-            if (!noScreen && b && !prevB) mc.gui.setScreen(null);
+
+            if (!noScreen) {
+                handleContainerScreen(mc.gui.screen(), b, prevB, lb, prevLb, rb, prevRb);
+                // Aで画面を閉じる
+                if (a && !prevA) mc.gui.setScreen(null);
+            } else {
+                lastMenuRef = null;
+            }
         }
 
+        prevA = a;
         prevRt = rt;
         prevLt = lt;
         prevB = b;
@@ -197,6 +222,50 @@ public final class GamepadManager {
         prevY = y;
         prevLb = lb;
         prevRb = rb;
+    }
+
+    // ---- 画面(インベントリ等)内のスロット選択・決定 ----
+    private static void handleContainerScreen(Screen screen, boolean b, boolean prevB, boolean lb, boolean prevLb, boolean rb, boolean prevRb) {
+        if (!(screen instanceof AbstractContainerScreen<?> cs)) {
+            lastMenuRef = null;
+            return;
+        }
+        AbstractContainerMenu menu = cs.getMenu();
+        List<Slot> slots = menu.slots;
+        if (menu != lastMenuRef) {
+            lastMenuRef = menu;
+            selectedSlotIndex = 0;
+        }
+        if (slots.isEmpty()) return;
+        if (selectedSlotIndex >= slots.size()) selectedSlotIndex = 0;
+
+        if (lb && !prevLb) selectedSlotIndex = Math.floorMod(selectedSlotIndex - 1, slots.size());
+        if (rb && !prevRb) selectedSlotIndex = Math.floorMod(selectedSlotIndex + 1, slots.size());
+
+        if (b && !prevB) {
+            Slot slot = slots.get(selectedSlotIndex);
+            ((ContainerScreenInvoker) cs).gamepadlite$slotClicked(slot, slot.index, 0, ContainerInput.PICKUP);
+        }
+    }
+
+    /** ContainerScreenRenderMixinから毎フレーム呼ばれる。選択中スロットの枠を描く */
+    public static void renderSlotHighlight(AbstractContainerScreen<?> screen, GuiGraphicsExtractor graphics) {
+        if (pad == 0L) return;
+        AbstractContainerMenu menu = screen.getMenu();
+        if (menu != lastMenuRef) return;
+        List<Slot> slots = menu.slots;
+        if (slots.isEmpty() || selectedSlotIndex < 0 || selectedSlotIndex >= slots.size()) return;
+
+        Slot slot = slots.get(selectedSlotIndex);
+        ContainerScreenAccessor acc = (ContainerScreenAccessor) screen;
+        int x = acc.gamepadlite$getLeftPos() + slot.x;
+        int y = acc.gamepadlite$getTopPos() + slot.y;
+        int x0 = x - 1, y0 = y - 1, x1 = x + 17, y1 = y + 17;
+
+        graphics.fill(x0, y0, x1, y0 + 2, SLOT_HIGHLIGHT_COLOR);
+        graphics.fill(x0, y1 - 2, x1, y1, SLOT_HIGHLIGHT_COLOR);
+        graphics.fill(x0, y0, x0 + 2, y1, SLOT_HIGHLIGHT_COLOR);
+        graphics.fill(x1 - 2, y0, x1, y1, SLOT_HIGHLIGHT_COLOR);
     }
 
     private static void resetState(Minecraft mc) {
@@ -207,7 +276,9 @@ public final class GamepadManager {
             hold(mc.options.keyAttack, false, prevRt);
             hold(mc.options.keyUse, false, prevLt);
         }
-        prevRt = prevLt = prevB = prevX = prevY = prevLb = prevRb = false;
+        prevA = prevRt = prevLt = prevB = prevX = prevY = prevLb = prevRb = false;
+        lastMenuRef = null;
+        selectedSlotIndex = 0;
     }
 
     // ---- KeyMapping操作 ----

@@ -5,7 +5,10 @@
   "client": [
     "KeyMappingAccessor",
     "KeyboardInputMixin",
-    "MouseHandlerMixin"
+    "MouseHandlerMixin",
+    "ContainerScreenAccessor",
+    "ContainerScreenInvoker",
+    "ContainerScreenRenderMixin"
   ],
   "injectors": {
     "defaultRequire": 1

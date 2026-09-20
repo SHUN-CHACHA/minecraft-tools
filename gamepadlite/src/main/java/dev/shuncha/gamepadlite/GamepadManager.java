@@ -20,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.IntBuffer;
 import java.util.List;
+import java.util.function.IntConsumer;
 
 public final class GamepadManager {
     private static final Logger LOGGER = LoggerFactory.getLogger("GamepadLite");
@@ -49,6 +50,10 @@ public final class GamepadManager {
     private static Object lastMenuRef;
     private static int selectedSlotIndex;
 
+    // ボタン再割り当て(設定画面から呼ばれる)
+    private static IntConsumer captureCallback;
+    private static boolean[] prevAnyButton;
+
     private GamepadManager() {}
 
     // ---- Mixinから参照する値 ----
@@ -60,6 +65,35 @@ public final class GamepadManager {
     public static boolean sprintHeld() { return sprintHeld; }
     public static double lookDx() { return lookDx; }
     public static double lookDy() { return lookDy; }
+
+    // ---- 設定画面向け ----
+    public static void startCapture(IntConsumer callback) {
+        captureCallback = callback;
+    }
+
+    public static boolean isCapturing() {
+        return captureCallback != null;
+    }
+
+    public static String buttonLabel(int id) {
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_SOUTH) return "A";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_EAST) return "B";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_WEST) return "X";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_NORTH) return "Y";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_LEFT_SHOULDER) return "LB";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) return "RB";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_LEFT_STICK) return "L3";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_RIGHT_STICK) return "R3";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_BACK) return "Back";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_START) return "Start";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_GUIDE) return "Guide";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_DPAD_UP) return "十字上";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_DPAD_DOWN) return "十字下";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_DPAD_LEFT) return "十字左";
+        if (id == SDLGamepad.SDL_GAMEPAD_BUTTON_DPAD_RIGHT) return "十字右";
+        if (id < 0) return "-";
+        return "Btn" + id;
+    }
 
     // ---- 初期化・終了 ----
     private static void initSdl() {
@@ -101,6 +135,7 @@ public final class GamepadManager {
     }
 
     private static boolean btn(int b) {
+        if (b < 0) return false;
         return SDLGamepad.SDL_GetGamepadButton(pad, b);
     }
 
@@ -132,6 +167,28 @@ public final class GamepadManager {
         radial(axis(SDLGamepad.SDL_GAMEPAD_AXIS_RIGHTX), axis(SDLGamepad.SDL_GAMEPAD_AXIS_RIGHTY), TMP);
         lookX = TMP[0];
         lookY = TMP[1];
+        if (GamepadConfig.get().invertRightStickY) {
+            lookY = -lookY;
+        }
+    }
+
+    /** ボタンの再割り当て待ち(設定画面のキャプチャ)を毎tick確認する */
+    private static void pollCapture() {
+        if (pad == 0L) return;
+        if (prevAnyButton == null || prevAnyButton.length != SDLGamepad.SDL_GAMEPAD_BUTTON_COUNT) {
+            prevAnyButton = new boolean[SDLGamepad.SDL_GAMEPAD_BUTTON_COUNT];
+        }
+        for (int id = 0; id < prevAnyButton.length; id++) {
+            boolean now = btn(id);
+            if (captureCallback != null && now && !prevAnyButton[id]) {
+                IntConsumer cb = captureCallback;
+                captureCallback = null;
+                prevAnyButton[id] = true;
+                cb.accept(id);
+                continue;
+            }
+            prevAnyButton[id] = now;
+        }
     }
 
     /** 毎フレーム(MouseHandlerのMixinから)呼ぶ。視点移動量をlookDx/lookDyに入れ、動かすならtrue */
@@ -166,19 +223,21 @@ public final class GamepadManager {
             resetState(mc);
             return;
         }
+        pollCapture();
 
+        GamepadConfig cfg = GamepadConfig.get();
         Options o = mc.options;
         // 26.3では画面の管理がMinecraftからGuiに移動している
         boolean noScreen = mc.gui.screen() == null;
         boolean gameActive = mc.player != null && noScreen;
         active = gameActive;
 
-        boolean a = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_SOUTH);
-        boolean b = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_EAST);
-        boolean x = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_WEST);
-        boolean y = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_NORTH);
-        boolean lb = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_LEFT_SHOULDER);
-        boolean rb = btn(SDLGamepad.SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER);
+        boolean a = btn(cfg.buttonJumpOrClose);
+        boolean b = btn(cfg.buttonPrimary);
+        boolean x = btn(cfg.buttonSwapOffhand);
+        boolean y = btn(cfg.buttonInventory);
+        boolean lb = btn(cfg.buttonPrev);
+        boolean rb = btn(cfg.buttonNext);
         boolean rt = axis(SDLGamepad.SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) > TRIGGER_THRESHOLD;
         boolean lt = axis(SDLGamepad.SDL_GAMEPAD_AXIS_LEFT_TRIGGER) > TRIGGER_THRESHOLD;
 
@@ -207,8 +266,8 @@ public final class GamepadManager {
 
             if (!noScreen) {
                 handleContainerScreen(mc.gui.screen(), b, prevB, lb, prevLb, rb, prevRb);
-                // Aで画面を閉じる
-                if (a && !prevA) mc.gui.setScreen(null);
+                // Aで画面を閉じる(ボタン再割り当て中は誤爆しないよう抑止)
+                if (a && !prevA && !isCapturing()) mc.gui.setScreen(null);
             } else {
                 lastMenuRef = null;
             }
@@ -279,6 +338,7 @@ public final class GamepadManager {
         prevA = prevRt = prevLt = prevB = prevX = prevY = prevLb = prevRb = false;
         lastMenuRef = null;
         selectedSlotIndex = 0;
+        captureCallback = null;
     }
 
     // ---- KeyMapping操作 ----

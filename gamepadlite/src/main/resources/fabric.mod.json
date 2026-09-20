@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "gamepadlite",
-  "version": "26.3.1",
+  "version": "26.3.2",
   "name": "Gamepad Lite",
   "description": "Minimal game controller support for Minecraft 26.3 (SDL3).",
   "authors": ["SHUN-CHACHA"],
@@ -9,7 +9,8 @@
   "icon": "assets/gamepadlite/icon.png",
   "environment": "client",
   "entrypoints": {
-    "client": ["dev.shuncha.gamepadlite.GamepadLiteClient"]
+    "client": ["dev.shuncha.gamepadlite.GamepadLiteClient"],
+    "modmenu": ["dev.shuncha.gamepadlite.GamepadLiteModMenu"]
   },
   "mixins": ["gamepadlite.mixins.json"],
   "depends": {
@@ -17,5 +18,8 @@
     "minecraft": "~26.3",
     "java": ">=25",
     "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
   }
 }

@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "dev.shuncha.gamepadlite.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "KeyMappingAccessor",
+    "KeyboardInputMixin",
+    "MouseHandlerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

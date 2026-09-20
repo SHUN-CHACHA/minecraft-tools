@@ -18,3 +18,6 @@
 * [Everyone's Favorite Place (EFP)](https://github.com/SHUN-CHACHA/minecraft-tools/blob/main/efp)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — マルチサーバー参加者の拠点・設備座標を記録し、公開設定に応じて全員で共有できるPaperプラグイン。ディメンションごとに座標を管理し、座標マップ形式のGUIで一覧表示できます。
    * バージョン: v1.0.0(Minecraft 26.2対応)
    * 使用説明書: [日本語](https://github.com/SHUN-CHACHA/minecraft-tools/blob/main/efp/%E4%BD%BF%E7%94%A8%E8%AA%AC%E6%98%8E%E6%9B%B8.md)
+- [Gamepad Lite](./gamepadlite/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — Fabric MOD版。Minecraft 26.3で採用されたSDL3経由でXInput系ゲームコントローラーを認識し、移動・視点操作・ジャンプ/ダッシュ/スニーク・攻撃/使用・ホットバー切替に対応します。インベントリ等の画面ではLB/RBでスロットを選択しBで決定、Aで画面を閉じられます。ControlifyなどMinecraft 26.3に正式対応した既存コントローラーMODが登場するまでのつなぎとして、Modrinthには公開せずGitHub Releasesのみで配布しています。
+  - バージョン: v26.3.1(Minecraft 26.3対応)
+  - 対応コントローラー: ELECOM JC-U4113S(XBOXモード)で動作確認済み

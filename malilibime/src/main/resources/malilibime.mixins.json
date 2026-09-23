@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "dev.shuncha.malilibime.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "EditBoxMixin",
+    "GuiGraphicsExtractorMixin",
+    "KeyboardHandlerMixin",
+    "TextInputManagerAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

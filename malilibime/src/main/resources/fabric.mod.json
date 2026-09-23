@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "id": "malilibime",
+  "version": "${version}",
+  "name": "MaLiLib IME",
+  "description": "Litematica / MiniHUD / Tweakeroo などMaLiLib系MODのテキスト欄で日本語入力(IME)を使えるようにします",
+  "authors": ["SHUN-CHACHA"],
+  "environment": "client",
+  "mixins": ["malilibime.mixins.json"],
+  "depends": {
+    "fabricloader": ">=0.18.0",
+    "minecraft": "~26.3"
+  },
+  "suggests": {
+    "malilib": "*"
+  }
+}

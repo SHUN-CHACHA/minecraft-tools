@@ -2,6 +2,8 @@
 
 このリポジトリには、複数のMinecraft MOD/プラグイン/ツールのソースコードをまとめています。
 
+**jarは「ダウンロード」からどうぞ。**
+
 ## Mods / Plugins / Tools
 
 - [HeadFirework](./headfirework/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — Fabric MOD版。火薬+染料+プレイヤーヘッドから専用の花火の星を作り、打ち上げると爆発の瞬間にそのプレイヤーの顔が浮かび上がる演出を追加します。シングルプレイヤーでもマルチサーバーでも動作し、マルチサーバーの場合はクライアント側の操作が必要なければサーバー側だけでも動作します。

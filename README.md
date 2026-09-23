@@ -25,3 +25,4 @@
   - バージョン: v1.0.0(Minecraft 26.3対応)
   - 前提MOD: Fabric Loader / MaLiLib(Litematica等のMaLiLib系MODと併用)
   - 動作確認: Windows、Litematica 0.29.0 / MaLiLib 0.30.1 / MiniHUD 0.41.1
+  - 使用説明書: [日本語](./malilibime/使用説明書.md)

@@ -21,3 +21,7 @@
 - [Gamepad Lite](./gamepadlite/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — Fabric MOD版。Minecraft 26.3で採用されたSDL3経由でXInput系ゲームコントローラーを認識し、移動・視点操作・ジャンプ/ダッシュ/スニーク・攻撃/使用・ホットバー切替に対応します。インベントリ等の画面ではLB/RBでスロットを選択しBで決定、Aで画面を閉じられます。ControlifyなどMinecraft 26.3に正式対応した既存コントローラーMODが登場するまでのつなぎとして、Modrinthには公開せずGitHub Releasesのみで配布しています。
   - バージョン: v26.3.1(Minecraft 26.3対応)
   - 対応コントローラー: ELECOM JC-U4113S(XBOXモード)で動作確認済み
+- [MaLiLib IME](./malilibime/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — Fabric MOD版。Litematica・MiniHUD・TweakerooなどMaLiLibを使うMODの入力欄で、日本語入力(IME)を使えるようにするアドオンMODです。Minecraft 26.1以降のバニラのIME対応がMaLiLibの独自画面では働かず、「日本語モードに切り替わらない」「変換中の文字が表示されない」状態になる問題を補います。MaLiLibへのビルド依存はなく、バニラの入力欄の動作は変えません(クライアント専用)。
+  - バージョン: v1.0.0(Minecraft 26.3対応)
+  - 前提MOD: Fabric Loader / MaLiLib(Litematica等のMaLiLib系MODと併用)
+  - 動作確認: Windows、Litematica 0.29.0 / MaLiLib 0.30.1 / MiniHUD 0.41.1

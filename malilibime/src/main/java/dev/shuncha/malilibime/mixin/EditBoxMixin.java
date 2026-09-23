@@ -1,54 +1,45 @@
 package dev.shuncha.malilibime.mixin;
 
-import com.mojang.blaze3d.platform.TextInputManager;
 import dev.shuncha.malilibime.MalilibCompat;
-import dev.shuncha.malilibime.TopStratumOverlay;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
-import net.minecraft.client.gui.components.Renderable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 /**
- * - フォーカス中のMaLiLibテキスト欄について、IMEがオンかつ自分が入力先になっているかを毎フレーム確認し、
- *   画面切り替え時などにオフにされていたら再度オンにする。
- * - MaLiLibの欄では、変換中文字のオーバーレイを新しい層で描くよう包み直す。
+ * - MaLiLibの入力欄を描画している間、「MaLiLibの欄を描画中」の目印を立てる
+ *   (GuiGraphicsExtractorMixin が変換中文字オーバーレイを包み直すのに使う)。
+ * - フォーカス中のMaLiLibテキスト欄を「変換中文字の転送先」として記録する。
+ * - IMEがオフにされていたら(MaLiLibが他の欄のフォーカスを外した時など)、
+ *   バニラの Minecraft.onTextInputFocusChange で再度オンにする(26.2/26.3共通)。
+ * ※ 古いMixinExtras(26.2環境の0.5.4など)で問題が出るため、@Redirect は使わない。
  */
 @Mixin(EditBox.class)
 public abstract class EditBoxMixin {
 
     @Inject(method = "extractWidgetRenderState", at = @At("HEAD"))
-    private void malilibime$ensureTextInput(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+    private void malilibime$beforeRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
         EditBox self = (EditBox) (Object) this;
+        boolean malilib = MalilibCompat.isMalilibWidget(self);
+        MalilibCompat.setRenderingMalilibField(malilib);
 
-        if (!self.isFocused() || !self.canConsumeInput() || !MalilibCompat.isMalilibWidget(self)) {
+        if (!malilib || !self.isFocused() || !self.canConsumeInput()) {
             return;
         }
 
-        TextInputManager manager = Minecraft.getInstance().textInputManager();
-        TextInputManagerAccessor accessor = (TextInputManagerAccessor) manager;
+        MalilibCompat.markActive(self);
 
-        if (accessor.malilibime$getOwner() != self || !accessor.malilibime$isTextInputEnabled()) {
-            manager.startTextInput(self);
+        Minecraft mc = Minecraft.getInstance();
+        if (!((TextInputManagerAccessor) mc.textInputManager()).malilibime$isTextInputEnabled()) {
+            mc.onTextInputFocusChange(self, true);
         }
     }
 
-    @Redirect(
-            method = "extractWidgetRenderState",
-            at = @At(
-                    value = "INVOKE",
-                    target = "Lnet/minecraft/client/gui/GuiGraphicsExtractor;setPreeditOverlay(Lnet/minecraft/client/gui/components/Renderable;)V"
-            )
-    )
-    private void malilibime$wrapPreeditOverlay(GuiGraphicsExtractor graphics, Renderable overlay) {
-        if (overlay != null && MalilibCompat.isMalilibWidget(this)) {
-            graphics.setPreeditOverlay(new TopStratumOverlay(overlay));
-        } else {
-            graphics.setPreeditOverlay(overlay);
-        }
+    @Inject(method = "extractWidgetRenderState", at = @At("RETURN"))
+    private void malilibime$afterRender(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick, CallbackInfo ci) {
+        MalilibCompat.setRenderingMalilibField(false);
     }
 }

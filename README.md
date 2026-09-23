@@ -22,7 +22,7 @@
   - バージョン: v26.3.1(Minecraft 26.3対応)
   - 対応コントローラー: ELECOM JC-U4113S(XBOXモード)で動作確認済み
 - [MaLiLib IME](./malilibime/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — Fabric MOD版。Litematica・MiniHUD・TweakerooなどMaLiLibを使うMODの入力欄で、日本語入力(IME)を使えるようにするアドオンMODです。Minecraft 26.1以降のバニラのIME対応がMaLiLibの独自画面では働かず、「日本語モードに切り替わらない」「変換中の文字が表示されない」状態になる問題を補います。MaLiLibへのビルド依存はなく、バニラの入力欄の動作は変えません(クライアント専用)。
-  - バージョン: v1.0.0(Minecraft 26.3対応)
+  - バージョン: v1.1.0(Minecraft 26.2 / 26.3対応。1つのjarで両方に対応)
   - 前提MOD: Fabric Loader / MaLiLib(Litematica等のMaLiLib系MODと併用)
-  - 動作確認: Windows、Litematica 0.29.0 / MaLiLib 0.30.1 / MiniHUD 0.41.1
+  - 動作確認: Windows。26.3はLitematica 0.29.0 / MaLiLib 0.30.1 / MiniHUD 0.41.1、26.2はLitematica 0.28.7 / MaLiLib 0.29.6 / MiniHUD 0.40.7
   - 使用説明書: [日本語](./malilibime/使用説明書.md)

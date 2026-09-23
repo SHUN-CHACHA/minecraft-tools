@@ -9,7 +9,7 @@
   "mixins": ["malilibime.mixins.json"],
   "depends": {
     "fabricloader": ">=0.18.0",
-    "minecraft": "~26.3"
+    "minecraft": ["~26.2", "~26.3"]
   },
   "suggests": {
     "malilib": "*"

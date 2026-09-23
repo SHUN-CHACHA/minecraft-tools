@@ -6,9 +6,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 
 @Mixin(TextInputManager.class)
 public interface TextInputManagerAccessor {
-    @Accessor("owner")
-    Object malilibime$getOwner();
-
     @Accessor("textInputEnabled")
     boolean malilibime$isTextInputEnabled();
 }

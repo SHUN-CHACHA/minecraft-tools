@@ -3,8 +3,14 @@
   "id": "malilibime",
   "version": "${version}",
   "name": "MaLiLib IME",
-  "description": "Litematica / MiniHUD / Tweakeroo などMaLiLib系MODのテキスト欄で日本語入力(IME)を使えるようにします",
+  "description": "Enables IME (Japanese/Chinese/Korean) input in text fields of MaLiLib-based mods such as Litematica, MiniHUD and Tweakeroo. / Litematica・MiniHUD・TweakerooなどMaLiLib系MODの入力欄で日本語入力(IME)を使えるようにします。",
   "authors": ["SHUN-CHACHA"],
+  "contact": {
+    "sources": "https://github.com/SHUN-CHACHA/minecraft-tools/tree/main/malilibime",
+    "issues": "https://github.com/SHUN-CHACHA/minecraft-tools/issues"
+  },
+  "license": "MIT",
+  "icon": "assets/malilibime/icon.png",
   "environment": "client",
   "mixins": ["malilibime.mixins.json"],
   "depends": {

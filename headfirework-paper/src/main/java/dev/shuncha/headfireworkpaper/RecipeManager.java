@@ -5,6 +5,8 @@ import org.bukkit.DyeColor;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.CraftItemEvent;
@@ -52,13 +54,19 @@ public class RecipeManager implements Listener {
         CraftingInventory inv = event.getInventory();
         ItemStack[] matrix = inv.getMatrix();
 
-        ItemStack starResult = tryBuildStar(matrix);
+        // クラフト結果アイテムの表示名(花火の星・ロケット)はNBTに焼き込まれる固定文字列で、
+        // 閲覧者ごとに動的切り替えはできないため、クラフト操作をしている本人の
+        // クライアント言語を使って表示名の言語を決定する。
+        HumanEntity human = event.getView().getPlayer();
+        Player craftingPlayer = human instanceof Player p ? p : null;
+
+        ItemStack starResult = tryBuildStar(matrix, craftingPlayer);
         if (starResult != null) {
             inv.setResult(starResult);
             return;
         }
 
-        ItemStack rocketResult = tryBuildRocket(matrix);
+        ItemStack rocketResult = tryBuildRocket(matrix, craftingPlayer);
         if (rocketResult != null) {
             inv.setResult(rocketResult);
         }
@@ -69,7 +77,7 @@ public class RecipeManager implements Listener {
     // 星のレシピ判定
     // ------------------------------------------------------------------
 
-    private ItemStack tryBuildStar(ItemStack[] matrix) {
+    private ItemStack tryBuildStar(ItemStack[] matrix, Player craftingPlayer) {
         int gunpowder = 0;
         int fireCharge = 0, feather = 0, goldNugget = 0;
         int diamond = 0, glowstoneDust = 0;
@@ -133,7 +141,7 @@ public class RecipeManager implements Listener {
         ItemStack result = new ItemStack(Material.FIREWORK_STAR, 1);
         FireworkEffectMeta meta = (FireworkEffectMeta) result.getItemMeta();
         meta.setEffect(effect);
-        meta.setDisplayName(ownerName + "花火の星");
+        meta.setDisplayName(Lang.msg(craftingPlayer, "item.star_of", ownerName));
         meta.getPersistentDataContainer().set(ownersKey, PersistentDataType.STRING, ownerName);
         result.setItemMeta(meta);
         return result;
@@ -143,7 +151,7 @@ public class RecipeManager implements Listener {
     // ロケットのレシピ判定
     // ------------------------------------------------------------------
 
-    private ItemStack tryBuildRocket(ItemStack[] matrix) {
+    private ItemStack tryBuildRocket(ItemStack[] matrix, Player craftingPlayer) {
         int paper = 0;
         int gunpowder = 0;
         List<FireworkEffect> effects = new ArrayList<>();
@@ -192,9 +200,11 @@ public class RecipeManager implements Listener {
         FireworkMeta meta = (FireworkMeta) result.getItemMeta();
         meta.addEffects(effects);
         meta.setPower(gunpowder);
-        // 重複を除いたオーナー名一覧を表示名に使う(例: 1人なら「Steve花火」、複数人なら連名)
+        // 重複を除いたオーナー名一覧を表示名に使う(例: 1人なら「Steveの花火」、複数人なら連名)。
+        // 区切り文字もクラフトした本人の言語設定に合わせる(日本語: ・ / 英語: , )。
         java.util.LinkedHashSet<String> uniqueOwners = new java.util.LinkedHashSet<>(ownersPerEffect);
-        meta.setDisplayName(String.join("・", uniqueOwners) + "花火");
+        String separator = Lang.isEnglish(craftingPlayer) ? ", " : "・";
+        meta.setDisplayName(Lang.msg(craftingPlayer, "item.rocket_of", String.join(separator, uniqueOwners)));
         // 「,」区切りでeffectsと同じ並び順のownerリストを保存する(効果索引→ownerの対応を保つため)
         meta.getPersistentDataContainer().set(ownersKey, PersistentDataType.STRING, String.join(",", ownersPerEffect));
         result.setItemMeta(meta);

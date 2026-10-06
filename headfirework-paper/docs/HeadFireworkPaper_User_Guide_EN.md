@@ -6,7 +6,15 @@ A Paper plugin that lets you craft a custom firework star from a player head, gu
 
 - Drop `headfirework-paper-*.jar` into the server's `plugins` folder and restart.
 - **No client-side installation is required** — players see the effect with a vanilla client.
-- Supported version: Minecraft 26.2 / Paper
+- Supported versions: Minecraft 26.2 / 26.3 (26.3 is unverified on real hardware, pending PaperMC's stable 26.3 build) / Paper
+
+## Display language (Japanese/English)
+
+Command responses, the GUI (`/headfirework gui`, `/headfirework mygui`), and the startup update notification automatically switch between Japanese and English based on each player's Minecraft client language setting. There is no manual command to switch it.
+
+- Japanese client → Japanese text; any other client language (including English) → English text
+- The one exception is the name of crafted firework stars/rockets: since an item's display name can't change per viewer, it is fixed to **the language of whoever crafted it** at crafting time. If someone with a different language setting looks at that item later, it still shows in the crafter's language
+- If you switch languages while a GUI is already open, the open window won't update. Close it and run the command again
 
 ## Crafting
 
@@ -104,7 +112,7 @@ Opens a chest GUI where each value can be adjusted with −/+ buttons, with a pe
 On server startup, the plugin automatically checks GitHub's release list for a newer Paper-edition (`headfirework-paper-v*`) version.
 
 - If a newer version is found, a log line is printed to the server console
-- Additionally, any player with the `headfirework.admin` permission (operator by default) who joins the server is notified in chat with a message and a download link
+- Additionally, any player with the `headfirework.admin` permission (operator by default) who joins the server is notified in chat with a message and a download link (shown in that player's own language)
 - The check runs once at startup, asynchronously, so it never slows down server startup or gameplay
 - If an OP joins before the check has finished, no notification is shown for that join (no restart needed — they'll see it the next time they join after the check completes)
 - To disable it, run `/headfirework config update_check off` (default is on). The change takes effect the next time the server starts

@@ -175,7 +175,7 @@ public class FireworkListener implements Listener {
             d.setTransformation(transformation);
         });
 
-        player.sendMessage("pitch=" + pitchDeg + " roll=" + rollDeg + " yaw=" + yawDeg + " で頭を出しました(5秒で消えます)");
+        player.sendMessage(Lang.msg(player, "testhead.spawned", pitchDeg, rollDeg, yawDeg));
         plugin.getServer().getScheduler().runTaskLater(plugin, display::remove, 100L);
     }
 

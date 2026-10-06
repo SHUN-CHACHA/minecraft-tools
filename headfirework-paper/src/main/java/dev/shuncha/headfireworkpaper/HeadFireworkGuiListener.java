@@ -21,6 +21,11 @@ import java.util.UUID;
  *
  * Fabric MOD版のCtrl+JキーによるGUI画面(クライアント側MOD前提)の代わりに、
  * サーバー側だけで完結するチェストGUIとして実装している。
+ *
+ * GUIのタイトル・ボタン文字列は、そのGUIを開いた(操作している)プレイヤーの
+ * クライアント言語設定({@link Lang})に応じて日本語/英語を切り替える。
+ * インベントリはopen()のたびに新しく作られる1人分の画面なので、
+ * 他のプレイヤーの言語設定と混ざる心配はない。
  */
 public class HeadFireworkGuiListener implements Listener {
 
@@ -61,48 +66,50 @@ public class HeadFireworkGuiListener implements Listener {
     public void open(Player player) {
         Holder holder = new Holder();
         Inventory inventory = plugin.getServer().createInventory(holder, SIZE,
-                ChatColor.DARK_GRAY + "HeadFirework 設定");
+                ChatColor.DARK_GRAY + Lang.msg(player, "gui.admin.title"));
         holder.inventory = inventory;
-        render(inventory);
+        render(inventory, player);
         player.openInventory(inventory);
     }
 
-    /** 現在の設定値をもとに、GUI内の各アイテムを作り直す。 */
-    private void render(Inventory inventory) {
+    /** 現在の設定値をもとに、GUI内の各アイテムを作り直す。labelLocaleは文言の言語判定に使うプレイヤー。 */
+    private void render(Inventory inventory, Player labelLocale) {
         HeadFireworkConfig config = plugin.getHeadFireworkConfig();
         inventory.clear();
 
         fillBackground(inventory);
 
         setScaleRow(inventory, SMALL_BALL_MINUS, SMALL_BALL_DISPLAY, SMALL_BALL_PLUS, SMALL_BALL_RESET,
-                "小玉サイズ", HeadFireworkConfig.ExplosionShape.SMALL_BALL, Material.FIRE_CHARGE);
+                Lang.msg(labelLocale, "gui.label.small_ball"), HeadFireworkConfig.ExplosionShape.SMALL_BALL, Material.FIRE_CHARGE, labelLocale);
         setScaleRow(inventory, LARGE_BALL_MINUS, LARGE_BALL_DISPLAY, LARGE_BALL_PLUS, LARGE_BALL_RESET,
-                "大玉サイズ", HeadFireworkConfig.ExplosionShape.LARGE_BALL, Material.FIRE_CHARGE);
+                Lang.msg(labelLocale, "gui.label.large_ball"), HeadFireworkConfig.ExplosionShape.LARGE_BALL, Material.FIRE_CHARGE, labelLocale);
         setScaleRow(inventory, STAR_BURST_MINUS, STAR_BURST_DISPLAY, STAR_BURST_PLUS, STAR_BURST_RESET,
-                "星型/バーストサイズ", HeadFireworkConfig.ExplosionShape.STAR, Material.FIREWORK_STAR);
+                Lang.msg(labelLocale, "gui.label.star_burst"), HeadFireworkConfig.ExplosionShape.STAR, Material.FIREWORK_STAR, labelLocale);
 
         inventory.setItem(DISPLAY_DURATION_MINUS, arrowItem("-5"));
-        inventory.setItem(DISPLAY_DURATION_DISPLAY, valueItem(Material.CLOCK, "表示時間", config.getDisplayDuration() + " tick"));
+        inventory.setItem(DISPLAY_DURATION_DISPLAY, valueItem(Material.CLOCK,
+                Lang.msg(labelLocale, "label.display_duration"), config.getDisplayDuration() + " tick", labelLocale));
         inventory.setItem(DISPLAY_DURATION_PLUS, arrowItem("+5"));
-        inventory.setItem(DISPLAY_DURATION_RESET, resetItem());
+        inventory.setItem(DISPLAY_DURATION_RESET, resetItem(labelLocale));
 
         inventory.setItem(FADE_DURATION_MINUS, arrowItem("-5"));
-        inventory.setItem(FADE_DURATION_DISPLAY, valueItem(Material.GLASS, "フェードアウト時間", config.getFadeDuration() + " tick"));
+        inventory.setItem(FADE_DURATION_DISPLAY, valueItem(Material.GLASS,
+                Lang.msg(labelLocale, "label.fade_duration"), config.getFadeDuration() + " tick", labelLocale));
         inventory.setItem(FADE_DURATION_PLUS, arrowItem("+5"));
-        inventory.setItem(FADE_DURATION_RESET, resetItem());
+        inventory.setItem(FADE_DURATION_RESET, resetItem(labelLocale));
 
-        inventory.setItem(FACING_BUTTON, facingItem(config.getFacing(),
-                "サーバー全体のデフォルトの向き", "クリックで切り替え(北→東→南→西)"));
-        inventory.setItem(CLOSE_BUTTON, closeItem());
+        inventory.setItem(FACING_BUTTON, facingItem(config.getFacing(), labelLocale,
+                Lang.msg(labelLocale, "gui.label.facing_default"), Lang.msg(labelLocale, "gui.hint.click_cycle")));
+        inventory.setItem(CLOSE_BUTTON, closeItem(labelLocale));
     }
 
     private void setScaleRow(Inventory inventory, int minusSlot, int displaySlot, int plusSlot, int resetSlot,
-                              String label, HeadFireworkConfig.ExplosionShape shape, Material displayMaterial) {
+                              String label, HeadFireworkConfig.ExplosionShape shape, Material displayMaterial, Player labelLocale) {
         HeadFireworkConfig config = plugin.getHeadFireworkConfig();
         inventory.setItem(minusSlot, arrowItem("-1.0"));
-        inventory.setItem(displaySlot, valueItem(displayMaterial, label, String.valueOf(config.getScale(shape))));
+        inventory.setItem(displaySlot, valueItem(displayMaterial, label, String.valueOf(config.getScale(shape)), labelLocale));
         inventory.setItem(plusSlot, arrowItem("+1.0"));
-        inventory.setItem(resetSlot, resetItem());
+        inventory.setItem(resetSlot, resetItem(labelLocale));
     }
 
     // ------------------------------------------------------------------
@@ -112,7 +119,7 @@ public class HeadFireworkGuiListener implements Listener {
     public void openPersonal(Player player) {
         PersonalHolder holder = new PersonalHolder(player.getUniqueId());
         Inventory inventory = plugin.getServer().createInventory(holder, PERSONAL_SIZE,
-                ChatColor.DARK_GRAY + "HeadFirework 自分の設定");
+                ChatColor.DARK_GRAY + Lang.msg(player, "gui.personal.title"));
         holder.inventory = inventory;
         renderPersonal(inventory, player);
         player.openInventory(inventory);
@@ -127,19 +134,19 @@ public class HeadFireworkGuiListener implements Listener {
         boolean isPersonal = config.getPlayerFacing(player.getName()).isPresent();
 
         String status = isPersonal
-                ? ChatColor.AQUA + "個人設定が有効です"
-                : ChatColor.GRAY + "サーバーのデフォルト値を使用中です";
-        inventory.setItem(PERSONAL_FACING_BUTTON, facingItem(effective,
-                "自分の花火の顔の向き", "クリックで切り替え(北→東→南→西)", status));
+                ? ChatColor.AQUA + Lang.msg(player, "gui.status.personal_active")
+                : ChatColor.GRAY + Lang.msg(player, "gui.status.using_default");
+        inventory.setItem(PERSONAL_FACING_BUTTON, facingItem(effective, player,
+                Lang.msg(player, "gui.label.facing_personal"), Lang.msg(player, "gui.hint.click_cycle"), status));
 
         ItemStack resetItem = new ItemStack(Material.BARRIER);
         ItemMeta resetMeta = resetItem.getItemMeta();
-        resetMeta.setDisplayName(ChatColor.RED + "サーバーのデフォルト値に戻す");
-        resetMeta.setLore(List.of(ChatColor.GRAY + "個人設定を削除します"));
+        resetMeta.setDisplayName(ChatColor.RED + Lang.msg(player, "gui.reset_to_default"));
+        resetMeta.setLore(List.of(ChatColor.GRAY + Lang.msg(player, "gui.reset_to_default_lore")));
         resetItem.setItemMeta(resetMeta);
         inventory.setItem(PERSONAL_RESET_BUTTON, resetItem);
 
-        inventory.setItem(PERSONAL_CLOSE_BUTTON, closeItem());
+        inventory.setItem(PERSONAL_CLOSE_BUTTON, closeItem(player));
     }
 
     // ------------------------------------------------------------------
@@ -164,46 +171,46 @@ public class HeadFireworkGuiListener implements Listener {
         return item;
     }
 
-    private ItemStack valueItem(Material material, String label, String value) {
+    private ItemStack valueItem(Material material, String label, String value, Player labelLocale) {
         ItemStack item = new ItemStack(material);
         ItemMeta meta = item.getItemMeta();
         meta.setDisplayName(ChatColor.WHITE + label);
-        meta.setLore(List.of(ChatColor.GRAY + "現在値: " + ChatColor.AQUA + value));
+        meta.setLore(List.of(ChatColor.GRAY + Lang.msg(labelLocale, "gui.current_value") + ChatColor.AQUA + value));
         item.setItemMeta(meta);
         return item;
     }
 
-    private ItemStack resetItem() {
+    private ItemStack resetItem(Player labelLocale) {
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ChatColor.RED + "リセット");
+        meta.setDisplayName(ChatColor.RED + Lang.msg(labelLocale, "gui.reset"));
         item.setItemMeta(meta);
         return item;
     }
 
-    private ItemStack facingItem(BlockFace facing, String titleLabel, String... loreLines) {
+    private ItemStack facingItem(BlockFace facing, Player labelLocale, String titleLabel, String... loreLines) {
         ItemStack item = new ItemStack(Material.COMPASS);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ChatColor.GREEN + titleLabel + ": " + facingLabel(facing));
+        meta.setDisplayName(ChatColor.GREEN + titleLabel + ": " + facingLabel(facing, labelLocale));
         meta.setLore(List.of(loreLines).stream().map(line -> ChatColor.GRAY + line).toList());
         item.setItemMeta(meta);
         return item;
     }
 
-    private ItemStack closeItem() {
+    private ItemStack closeItem(Player labelLocale) {
         ItemStack item = new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
-        meta.setDisplayName(ChatColor.RED + "閉じる");
+        meta.setDisplayName(ChatColor.RED + Lang.msg(labelLocale, "gui.close"));
         item.setItemMeta(meta);
         return item;
     }
 
-    private String facingLabel(BlockFace facing) {
+    private String facingLabel(BlockFace facing, Player labelLocale) {
         return switch (facing) {
-            case NORTH -> "北 (north)";
-            case EAST -> "東 (east)";
-            case WEST -> "西 (west)";
-            default -> "南 (south)";
+            case NORTH -> Lang.msg(labelLocale, "facing.north");
+            case EAST -> Lang.msg(labelLocale, "facing.east");
+            case WEST -> Lang.msg(labelLocale, "facing.west");
+            default -> Lang.msg(labelLocale, "facing.south");
         };
     }
 
@@ -258,7 +265,7 @@ public class HeadFireworkGuiListener implements Listener {
         }
 
         config.save();
-        render(event.getInventory());
+        render(event.getInventory(), player);
     }
 
     private void handlePersonalClick(InventoryClickEvent event, PersonalHolder holder) {

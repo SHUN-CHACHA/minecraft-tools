@@ -13,6 +13,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
  * サーバーコンソールのログとは別に、実際にプレイしているOPにもゲーム内で
  * 気づいてもらうための通知。UpdateCheckerの非同期チェックが起動時に完了していない
  * (サーバー起動直後にOPが参加した)場合は何も表示されない点に注意。
+ *
+ * 通知文は参加したOP本人のクライアント言語設定({@link Lang})に応じて切り替わる。
  */
 public class UpdateNotifyListener implements Listener {
 
@@ -36,11 +38,10 @@ public class UpdateNotifyListener implements Listener {
 
         String currentVersion = plugin.getDescription().getVersion();
         player.sendMessage(ChatColor.GOLD + "[HeadFirework] " + ChatColor.YELLOW
-                + "新しいバージョン " + ChatColor.AQUA + checker.getLatestVersion() + ChatColor.YELLOW
-                + " が公開されています(現在: v" + currentVersion + ")。");
+                + Lang.msg(player, "update.new_version", ChatColor.AQUA + checker.getLatestVersion() + ChatColor.YELLOW, currentVersion));
         if (checker.getLatestReleaseUrl() != null) {
             player.sendMessage(ChatColor.GOLD + "[HeadFirework] " + ChatColor.YELLOW
-                    + "ダウンロード: " + ChatColor.AQUA + checker.getLatestReleaseUrl());
+                    + Lang.msg(player, "update.download", ChatColor.AQUA + checker.getLatestReleaseUrl()));
         }
     }
 }

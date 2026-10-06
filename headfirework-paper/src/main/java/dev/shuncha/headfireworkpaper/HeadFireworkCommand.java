@@ -18,6 +18,9 @@ import java.util.List;
  * デフォルト(true)で紐付けている。そのうえで、管理者専用のサブコマンド(config / gui)
  * だけをここで明示的にheadfirework.admin権限チェックしている。myface / mygui / testhead
  * は参加者本人が使うためのコマンドなので、admin権限は要求しない。
+ *
+ * プレイヤーへのメッセージは{@link Lang}経由で組み立てており、送信相手のクライアント
+ * 言語設定(日本語/英語)に応じて自動的に切り替わる。
  */
 public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
 
@@ -43,7 +46,7 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length > 0 && args[0].equalsIgnoreCase("mygui")) {
             if (!(sender instanceof org.bukkit.entity.Player player)) {
-                sender.sendMessage(ChatColor.RED + "このコマンドはプレイヤーのみ実行できます。");
+                sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.player_only"));
                 return true;
             }
             plugin.getGuiListener().openPersonal(player);
@@ -51,11 +54,11 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length > 0 && args[0].equalsIgnoreCase("gui")) {
             if (!sender.hasPermission("headfirework.admin")) {
-                sender.sendMessage(ChatColor.RED + "このコマンドを使う権限がありません。");
+                sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.no_permission"));
                 return true;
             }
             if (!(sender instanceof org.bukkit.entity.Player player)) {
-                sender.sendMessage(ChatColor.RED + "このコマンドはプレイヤーのみ実行できます。");
+                sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.player_only"));
                 return true;
             }
             plugin.getGuiListener().open(player);
@@ -65,34 +68,33 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
         HeadFireworkConfig config = plugin.getHeadFireworkConfig();
 
         if (args.length == 0 || !args[0].equalsIgnoreCase("config")) {
-            sender.sendMessage(ChatColor.RED + "使用法: /headfirework config <項目> <値> / /headfirework gui / "
-                    + "/headfirework myface <方角> / /headfirework mygui / /headfirework testhead <pitch> <roll> <yaw>");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "usage.main"));
             return true;
         }
 
         if (!sender.hasPermission("headfirework.admin")) {
-            sender.sendMessage(ChatColor.RED + "このコマンドを使う権限がありません。");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.no_permission"));
             return true;
         }
 
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "項目を指定してください: " + String.join(", ", SUBCOMMANDS));
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.specify_item", String.join(", ", SUBCOMMANDS)));
             return true;
         }
 
         String sub = args[1].toLowerCase();
         switch (sub) {
             case "scale" -> handleScale(sender, config, args);
-            case "display_duration" -> handleIntSetting(sender, args, "表示時間",
+            case "display_duration" -> handleIntSetting(sender, args, "label.display_duration",
                     config::setDisplayDuration, config::resetDisplayDuration);
-            case "animation_duration" -> handleIntSetting(sender, args, "拡大アニメーション時間",
+            case "animation_duration" -> handleIntSetting(sender, args, "label.animation_duration",
                     config::setAnimationDuration, config::resetAnimationDuration);
-            case "fade_duration" -> handleIntSetting(sender, args, "フェードアウト時間",
+            case "fade_duration" -> handleIntSetting(sender, args, "label.fade_duration",
                     config::setFadeDuration, config::resetFadeDuration);
             case "facing" -> handleFacing(sender, config, args);
             case "update_check" -> handleUpdateCheck(sender, config, args);
             case "show" -> showConfig(sender, config);
-            default -> sender.sendMessage(ChatColor.RED + "不明な項目です: " + sub);
+            default -> sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.unknown_item", sub));
         }
 
         config.save();
@@ -105,11 +107,11 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
      */
     private boolean handleTestHead(CommandSender sender, String[] args) {
         if (!(sender instanceof org.bukkit.entity.Player player)) {
-            sender.sendMessage(ChatColor.RED + "このコマンドはプレイヤーのみ実行できます。");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.player_only"));
             return true;
         }
         if (args.length < 4) {
-            sender.sendMessage(ChatColor.RED + "使用法: /headfirework testhead <pitch> <roll> <yaw> (角度は度数法)");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "usage.testhead"));
             return true;
         }
         try {
@@ -118,7 +120,7 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
             float yaw = Float.parseFloat(args[3]);
             plugin.getFireworkListener().spawnDebugHead(player, pitch, roll, yaw);
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "角度は数値で指定してください。");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.specify_angle_number"));
         }
         return true;
     }
@@ -131,13 +133,13 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
      */
     private boolean handleMyFace(CommandSender sender, String[] args) {
         if (!(sender instanceof org.bukkit.entity.Player player)) {
-            sender.sendMessage(ChatColor.RED + "このコマンドはプレイヤーのみ実行できます。");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.player_only"));
             return true;
         }
         HeadFireworkConfig config = plugin.getHeadFireworkConfig();
 
         if (args.length < 2) {
-            sender.sendMessage(ChatColor.RED + "使用法: /headfirework myface <north|south|east|west> / show / reset");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "usage.myface"));
             return true;
         }
 
@@ -146,14 +148,14 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
         if (value.equals("show")) {
             String current = config.getPlayerFacing(player.getName())
                     .map(f -> f.name().toLowerCase())
-                    .orElse("未設定(サーバーのデフォルト値「" + config.getFacing().name().toLowerCase() + "」を使用中)");
-            player.sendMessage(ChatColor.YELLOW + "あなたの花火の顔の向き設定: " + ChatColor.AQUA + current);
+                    .orElse(Lang.msg(sender, "myface.show_unset", config.getFacing().name().toLowerCase()));
+            player.sendMessage(ChatColor.YELLOW + Lang.msg(sender, "myface.show", ChatColor.AQUA + current));
             return true;
         }
         if (value.equals("reset")) {
             config.resetPlayerFacing(player.getName());
             config.save();
-            player.sendMessage(ChatColor.GREEN + "顔の向き設定をサーバーのデフォルト値に戻しました。");
+            player.sendMessage(ChatColor.GREEN + Lang.msg(sender, "myface.reset"));
             return true;
         }
 
@@ -165,59 +167,60 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
             default -> null;
         };
         if (face == null) {
-            sender.sendMessage(ChatColor.RED + "不明な方角です: " + args[1]
-                    + " (使用可能: " + String.join(", ", DIRECTIONS) + " / show / reset)");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.myface_unknown_direction",
+                    args[1], String.join(", ", DIRECTIONS)));
             return true;
         }
         config.setPlayerFacing(player.getName(), face);
         config.save();
-        player.sendMessage(ChatColor.GREEN + "あなたの花火に映る顔の向きを" + value + "に設定しました。");
+        player.sendMessage(ChatColor.GREEN + Lang.msg(sender, "myface.set", value));
         return true;
     }
 
     private void handleScale(CommandSender sender, HeadFireworkConfig config, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "使用法: /headfirework config scale <形状> <値>");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "usage.config_scale"));
             return;
         }
         HeadFireworkConfig.ExplosionShape shape = parseShape(args[2]);
         if (shape == null) {
-            sender.sendMessage(ChatColor.RED + "不明な形状です: " + args[2] + " (使用可能: " + String.join(", ", SHAPES) + ")");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.unknown_shape", args[2], String.join(", ", SHAPES)));
             return;
         }
         if (args.length < 4) {
             config.resetScale(shape);
-            sender.sendMessage(ChatColor.GREEN + args[2] + "のサイズをデフォルトに戻しました。");
+            sender.sendMessage(ChatColor.GREEN + Lang.msg(sender, "config.scale_reset", args[2]));
             return;
         }
         try {
             double value = Double.parseDouble(args[3]);
             config.setScale(shape, value);
-            sender.sendMessage(ChatColor.GREEN + args[2] + "のサイズを" + value + "に設定しました。");
+            sender.sendMessage(ChatColor.GREEN + Lang.msg(sender, "config.scale_set", args[2], value));
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "数値を指定してください: " + args[3]);
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.specify_number", args[3]));
         }
     }
 
-    private void handleIntSetting(CommandSender sender, String[] args, String label,
+    private void handleIntSetting(CommandSender sender, String[] args, String labelKey,
                                    java.util.function.IntConsumer setter, Runnable reset) {
+        String label = Lang.msg(sender, labelKey);
         if (args.length < 3) {
             reset.run();
-            sender.sendMessage(ChatColor.GREEN + label + "をデフォルトに戻しました。");
+            sender.sendMessage(ChatColor.GREEN + Lang.msg(sender, "config.int_reset", label));
             return;
         }
         try {
             int value = Integer.parseInt(args[2]);
             setter.accept(value);
-            sender.sendMessage(ChatColor.GREEN + label + "を" + value + "tickに設定しました。");
+            sender.sendMessage(ChatColor.GREEN + Lang.msg(sender, "config.int_set", label, value));
         } catch (NumberFormatException e) {
-            sender.sendMessage(ChatColor.RED + "整数を指定してください: " + args[2]);
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.specify_integer", args[2]));
         }
     }
 
     private void handleFacing(CommandSender sender, HeadFireworkConfig config, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "使用法: /headfirework config facing <north|south|east|west>");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "usage.config_facing"));
             return;
         }
         BlockFace face = switch (args[2].toLowerCase()) {
@@ -228,11 +231,12 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
             default -> null;
         };
         if (face == null) {
-            sender.sendMessage(ChatColor.RED + "不明な方角です: " + args[2] + " (使用可能: " + String.join(", ", DIRECTIONS) + ")");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.config_unknown_direction",
+                    args[2], String.join(", ", DIRECTIONS)));
             return;
         }
         config.setFacing(face);
-        sender.sendMessage(ChatColor.GREEN + "顔の向きを" + args[2] + "に設定しました。");
+        sender.sendMessage(ChatColor.GREEN + Lang.msg(sender, "config.facing_set", args[2]));
     }
 
     /**
@@ -241,23 +245,23 @@ public class HeadFireworkCommand implements CommandExecutor, TabCompleter {
      */
     private void handleUpdateCheck(CommandSender sender, HeadFireworkConfig config, String[] args) {
         if (args.length < 3) {
-            sender.sendMessage(ChatColor.RED + "使用法: /headfirework config update_check <on|off>");
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "usage.config_update_check"));
             return;
         }
         String value = args[2].toLowerCase();
         if (value.equals("on")) {
             config.setUpdateCheckEnabled(true);
-            sender.sendMessage(ChatColor.GREEN + "起動時の更新チェックを有効にしました(次回起動時から反映されます)。");
+            sender.sendMessage(ChatColor.GREEN + Lang.msg(sender, "config.update_check_on"));
         } else if (value.equals("off")) {
             config.setUpdateCheckEnabled(false);
-            sender.sendMessage(ChatColor.GREEN + "起動時の更新チェックを無効にしました(次回起動時から反映されます)。");
+            sender.sendMessage(ChatColor.GREEN + Lang.msg(sender, "config.update_check_off"));
         } else {
-            sender.sendMessage(ChatColor.RED + "onまたはoffを指定してください: " + args[2]);
+            sender.sendMessage(ChatColor.RED + Lang.msg(sender, "error.specify_on_off", args[2]));
         }
     }
 
     private void showConfig(CommandSender sender, HeadFireworkConfig config) {
-        sender.sendMessage(ChatColor.YELLOW + "=== HeadFirework 現在の設定 ===");
+        sender.sendMessage(ChatColor.YELLOW + Lang.msg(sender, "config.show_header"));
         for (HeadFireworkConfig.ExplosionShape shape : HeadFireworkConfig.ExplosionShape.values()) {
             sender.sendMessage(ChatColor.GRAY + "  " + shape.name().toLowerCase() + ": " + config.getScale(shape));
         }

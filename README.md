@@ -11,6 +11,9 @@
   - 使用説明書: [日本語](./headfirework/docs/HeadFirework_使用説明書_JP.md) / [English](./headfirework/docs/HeadFirework_User_Guide_EN.md)
   - クラフトレシピ集: [日本語](./headfirework/docs/HeadFirework_クラフトレシピ集.md) / [English](./headfirework/docs/HeadFirework_Crafting_Recipes_EN.md)
 - [HeadFirework Paper Plugin](./headfirework-paper/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — Paperサーバー用プラグイン版。同じ演出をサーバー側だけの導入で実現できます(参加者側の導入は不要)。コマンド応答・GUI・アイテム名はプレイヤーのクライアント言語設定(日本語/英語)に応じて自動的に切り替わります。
+
+  ![HeadFirework Paper デモ](./headfirework-paper/docs/images/demo.gif)
+
   - バージョン: 正式版 v1.2.0(Minecraft 26.2 / 26.3対応。26.3はPaperMCの正式ビルド公開待ちのため実機未確認)
   - 使用説明書: [日本語](./headfirework-paper/docs/HeadFireworkPaper_使用説明書_JP.md) / [English](./headfirework-paper/docs/HeadFireworkPaper_User_Guide_EN.md)
   - クラフトレシピ集: [日本語](./headfirework-paper/docs/HeadFireworkPaper_クラフトレシピ集.md) / [English](./headfirework-paper/docs/HeadFireworkPaper_Crafting_Recipes_EN.md)

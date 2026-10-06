@@ -1,5 +1,7 @@
 # HeadFirework (Paper Edition) User Guide
 
+![Demo](images/demo.gif)
+
 A Paper plugin that lets you craft a custom firework star from a player head, gunpowder, and dye. When the rocket explodes, that player's face appears at the blast site.
 
 ## Installation

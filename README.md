@@ -7,7 +7,7 @@
 ## Mods / Plugins / Tools
 
 - [HeadFirework](./headfirework/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — Fabric MOD版。火薬+染料+プレイヤーヘッドから専用の花火の星を作り、打ち上げると爆発の瞬間にそのプレイヤーの顔が浮かび上がる演出を追加します。シングルプレイヤーでもマルチサーバーでも動作し、マルチサーバーの場合はクライアント側の操作が必要なければサーバー側だけでも動作します。
-  - バージョン: 正式版 v1.1.4(Minecraft 26.2) / 最新β v1.2.0-beta.2(Minecraft 26.3対応)
+  - バージョン: 正式版 v1.2.0(Minecraft 26.3対応) / Minecraft 26.2向けは v1.1.4
   - 使用説明書: [日本語](./headfirework/docs/HeadFirework_使用説明書_JP.md) / [English](./headfirework/docs/HeadFirework_User_Guide_EN.md)
   - クラフトレシピ集: [日本語](./headfirework/docs/HeadFirework_クラフトレシピ集.md) / [English](./headfirework/docs/HeadFirework_Crafting_Recipes_EN.md)
 - [HeadFirework Paper Plugin](./headfirework-paper/)([ダウンロード](https://github.com/SHUN-CHACHA/minecraft-tools/releases)) — Paperサーバー用プラグイン版。同じ演出をサーバー側だけの導入で実現できます(参加者側の導入は不要)。コマンド応答・GUI・アイテム名はプレイヤーのクライアント言語設定(日本語/英語)に応じて自動的に切り替わります。
